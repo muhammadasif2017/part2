@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Filter = ({ nameToFind, findPerson }) => {
   return (
@@ -81,6 +82,15 @@ const App = () => {
       alert(`${newName} is already added to phonebook`);
     }
   };
+
+  useEffect(() => {
+    axios
+      .get('http://localhost:3001/persons')
+      .then((response) => {
+        console.log(response);
+        setPersons(response.data);
+      })
+  }, []);
 
   return (
     <div>
