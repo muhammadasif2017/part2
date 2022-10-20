@@ -32,7 +32,7 @@ const PersonForm = ({
   );
 };
 
-const Persons = ({ searchResult, persons }) => {
+const Persons = ({ searchResult, persons, deletePerson }) => {
   if (searchResult.length > 0) {
     return (
       <>
@@ -42,7 +42,14 @@ const Persons = ({ searchResult, persons }) => {
   }
   return (
     <>
-      {persons.map((person) =><div key={person.name}>{`${person.name} ${person.number}`}</div>)}
+      {persons.map((person) => {
+        return (
+          <div key={person.name}>
+            {`${person.name} ${person.number}`}
+            <button onClick={() => deletePerson(person)}>delete</button>
+          </div>
+        )
+      })}
     </>
   );
 };
@@ -72,24 +79,60 @@ const App = () => {
   }
 
   const isPersonExist = (name) => {
-    return persons.some(person => person.name === name);
+    return persons.find(person => person.name === name);
   };
 
   const addNewPerson = (e) => {
     e.preventDefault();
-    if (!isPersonExist(newName)) {
-      setPersons([...persons, { name: newName, number: newNumber }]);
+    const isPersonFound = isPersonExist(newName);
+    const addNewPerson = { name: newName, number: newNumber };
+    if (!isPersonFound) {
+      personServices
+        .createPerson(addNewPerson)
+        .then((person) => {
+          console.log(person);
+          setPersons([...persons, person]);
+        })
+        .catch(error => alert(error));
+      
     } else {
-      alert(`${newName} is already added to phonebook`);
+      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+        const { id } = isPersonFound;
+        personServices
+          .updatePerson(id, addNewPerson)
+          .then((response) => { 
+            const updatePersonsList = persons.map((person) => person.id !== id ? person : response);
+            setPersons(updatePersonsList);
+          })
+          .catch((error) => alert(error));
+      }
+    }
+  };
+
+  const deletePerson = (person) => {
+    const { id, name } = person;
+    if (window.confirm(`Delete ${name} ?`)) {
+      personServices
+        .deletePerson(id)
+        .then(() => {
+          const allPersons = persons.filter(person => person.id !== id);
+          setPersons(allPersons);
+        })
+        .catch((error) => {
+          alert(error);
+        })
     }
   };
 
   useEffect(() => {
     personServices
-      .getAll()
+      .getAllPersons()
       .then((initialPersons) => {
         console.log(initialPersons);
         setPersons(initialPersons);
+      })
+      .catch((error) => {
+        alert(error);
       })
   }, []);
 
@@ -98,9 +141,15 @@ const App = () => {
       <h2>Phonebook</h2>
       <Filter nameToFind={nameToFind} findPerson={findPerson}/>
       <h3>add a new</h3>
-      <PersonForm newName={newName} newNumber={newNumber} addNewName={addNewName} addNewNumber={addNewNumber} addNewPerson={addNewPerson}/>
+      <PersonForm 
+        newName={newName}
+        newNumber={newNumber}
+        addNewName={addNewName}
+        addNewNumber={addNewNumber}
+        addNewPerson={addNewPerson} 
+      />
       <h2>Numbers</h2>
-      <Persons searchResult={searchResult} persons={persons}/>
+      <Persons searchResult={searchResult} persons={persons} deletePerson={deletePerson}/>
     </div>
   )
 }
