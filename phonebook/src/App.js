@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 
 import personServices from './services/phonebook';
 
+import './App.css';
+
 const Filter = ({ nameToFind, findPerson }) => {
   return (
     <div>
@@ -54,6 +56,18 @@ const Persons = ({ searchResult, persons, deletePerson }) => {
   );
 };
 
+const Notification = ({ message, messageType }) => {
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div className={ messageType === 'Error' ? 'error' : 'success'}>
+      {message}
+    </div>
+  );
+};
+
 const App = () => {
   const [persons, setPersons] = useState([
     { name: 'Arto Hellas', number: '040-123456' }
@@ -62,6 +76,8 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('');
   const [nameToFind, setNameToFind] = useState('');
   const [searchResult, setSearchResult] = useState([]);
+  const [message, setMessage] = useState(null);
+  const [messageType, setMessageType] = useState('');
 
   const addNewName = (e) => {
     setNewName(e.target.value);
@@ -90,8 +106,13 @@ const App = () => {
       personServices
         .createPerson(addNewPerson)
         .then((person) => {
-          console.log(person);
           setPersons([...persons, person]);
+          setMessage(`Added ${newName}`);
+          setMessageType('Success');
+          setTimeout(() => {
+            setMessage(null);
+            setMessageType('');
+          }, 5000);
         })
         .catch(error => alert(error));
       
@@ -119,7 +140,15 @@ const App = () => {
           setPersons(allPersons);
         })
         .catch((error) => {
-          alert(error);
+          setMessage(
+            `Information of ${name} has already been removed from server`
+          );
+          setMessageType('Error');
+          setTimeout(() => {
+            setMessage(null);
+            setMessageType('');
+          }, 5000);
+          setPersons(persons.filter(person => person.id !== id));
         })
     }
   };
@@ -128,7 +157,6 @@ const App = () => {
     personServices
       .getAllPersons()
       .then((initialPersons) => {
-        console.log(initialPersons);
         setPersons(initialPersons);
       })
       .catch((error) => {
@@ -139,6 +167,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} messageType={messageType}/>
       <Filter nameToFind={nameToFind} findPerson={findPerson}/>
       <h3>add a new</h3>
       <PersonForm 
