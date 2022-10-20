@@ -23,9 +23,27 @@ const Capitals = ({ capital }) => {
   return (
     <div>capitals {showMultipleCapitals}</div>
   )
+};
+
+const ShowWeather = ({ currentWeather }) => {
+  const {
+    weather,
+    main,
+    wind,
+  } = currentWeather;
+
+  return (
+    <div>
+      <div>temperature {main.temp - 273.15} Celsius</div>
+      <div>
+        <img src={`http://openweathermap.org/img/wn/${weather[0].icon}@2x.png`} alt="weather-icon"/>
+      </div>
+      <div>wind {wind.speed} m/s</div>
+    </div>
+  );
 }
 
-const ShowCountries = ({ countries, fetchCountryData }) => {
+const ShowCountries = ({ countries, fetchCountryData, weather }) => {
   if (countries.length > 10) {
     return (
       <div>
@@ -68,6 +86,8 @@ const ShowCountries = ({ countries, fetchCountryData }) => {
         <div>
           <img src={flags.png} alt="Country"/>
         </div>
+        <h2>Weather in {`${capital[0]}`}</h2>
+        {weather.main && <ShowWeather currentWeather={weather}/>}
       </div>
     );
   }
@@ -76,18 +96,28 @@ const ShowCountries = ({ countries, fetchCountryData }) => {
 function App() {
   const [countryName, setCountryName] = useState('');
   const [countries, setCountries] = useState([]);
+  const [weather, setWeather] = useState({});
 
   const findCountry = (e) => {
     setCountryName(e.target.value);
   };
 
   const fetchCountryData = (name) => {
+    console.log(name);
     const url = `https://restcountries.com/v3.1/name/${name}`;
     axios
       .get(url)
       .then((response) => { 
-        console.log(response);
         setCountries(response.data);
+        if (response.data.length === 1) {
+          const capital = response.data[0].capital[0];
+          axios
+            .get(`http://api.openweathermap.org/data/2.5/weather?q=${capital}&appid=${process.env.REACT_APP_API_KEY}`)
+            .then((response) => {
+              console.log(response);
+              setWeather(response.data);
+            });
+        }
       });
   }
 
@@ -107,7 +137,7 @@ function App() {
   return (
     <div>
       find countries <input value={countryName} onChange={findCountry}/>
-      <ShowCountries countries={countries} fetchCountryData={fetchCountryData}/>
+      <ShowCountries countries={countries} fetchCountryData={fetchCountryData} weather={weather}/>
     </div>
   );
 }
