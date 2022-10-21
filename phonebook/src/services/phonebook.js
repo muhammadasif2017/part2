@@ -1,5 +1,5 @@
 import axios from 'axios';
-const baseUrl = 'http://localhost:3001/persons';
+const baseUrl = 'https://asif-node.herokuapp.com/';
 
 const getAllPersons = () => {
   const request = axios.get(baseUrl)
