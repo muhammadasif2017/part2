@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-import personServices from './services/phonebook';
+import personServices from "./services/phonebook";
 
-import './App.css';
+import "./App.css";
 
 const Filter = ({ nameToFind, findPerson }) => {
   return (
     <div>
-      filter shown with <input value={nameToFind} onChange={findPerson}/>
+      filter shown with <input value={nameToFind} onChange={findPerson} />
     </div>
   );
 };
@@ -17,15 +17,15 @@ const PersonForm = ({
   newNumber,
   addNewName,
   addNewNumber,
-  addNewPerson
+  addNewPerson,
 }) => {
   return (
     <form onSubmit={addNewPerson}>
       <div>
-        name: <input value={newName} onChange={addNewName}/>
+        name: <input value={newName} onChange={addNewName} />
       </div>
       <div>
-        number: <input value={newNumber} onChange={addNewNumber}/>
+        number: <input value={newNumber} onChange={addNewNumber} />
       </div>
       <div>
         <button type="submit">add</button>
@@ -38,9 +38,11 @@ const Persons = ({ searchResult, persons, deletePerson }) => {
   if (searchResult.length > 0) {
     return (
       <>
-        {searchResult.map((person) => <div key={person.name}>{`${person.name} ${person.number}`}</div>)}
+        {searchResult.map((person) => (
+          <div key={person.name}>{`${person.name} ${person.number}`}</div>
+        ))}
       </>
-    )
+    );
   }
   return (
     <>
@@ -50,7 +52,7 @@ const Persons = ({ searchResult, persons, deletePerson }) => {
             {`${person.name} ${person.number}`}
             <button onClick={() => deletePerson(person)}>delete</button>
           </div>
-        )
+        );
       })}
     </>
   );
@@ -58,11 +60,11 @@ const Persons = ({ searchResult, persons, deletePerson }) => {
 
 const Notification = ({ message, messageType }) => {
   if (message === null) {
-    return null
+    return null;
   }
 
   return (
-    <div className={ messageType === 'Error' ? 'error' : 'success'}>
+    <div className={messageType === "Error" ? "error" : "success"}>
       {message}
     </div>
   );
@@ -70,14 +72,14 @@ const Notification = ({ message, messageType }) => {
 
 const App = () => {
   const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '040-123456' }
+    { name: "Arto Hellas", number: "040-123456" },
   ]);
-  const [newName, setNewName] = useState('');
-  const [newNumber, setNewNumber] = useState('');
-  const [nameToFind, setNameToFind] = useState('');
+  const [newName, setNewName] = useState("");
+  const [newNumber, setNewNumber] = useState("");
+  const [nameToFind, setNameToFind] = useState("");
   const [searchResult, setSearchResult] = useState([]);
   const [message, setMessage] = useState(null);
-  const [messageType, setMessageType] = useState('');
+  const [messageType, setMessageType] = useState("");
 
   const addNewName = (e) => {
     setNewName(e.target.value);
@@ -89,13 +91,13 @@ const App = () => {
 
   const findPerson = (e) => {
     setNameToFind(e.target.value);
-    const regex = new RegExp(e.target.value, 'ig');
+    const regex = new RegExp(e.target.value, "ig");
     const searchResult = persons.filter((person) => regex.test(person.name));
     setSearchResult(searchResult);
-  }
+  };
 
   const isPersonExist = (name) => {
-    return persons.find(person => person.name === name);
+    return persons.find((person) => person.name === name);
   };
 
   const addNewPerson = (e) => {
@@ -107,22 +109,31 @@ const App = () => {
         .createPerson(addNewPerson)
         .then((person) => {
           setPersons([...persons, person]);
+          console.log('Persons createPerson=>', person);
           setMessage(`Added ${newName}`);
-          setMessageType('Success');
+          setMessageType("Success");
           setTimeout(() => {
             setMessage(null);
-            setMessageType('');
+            setMessageType("");
           }, 5000);
         })
-        .catch(error => alert(error));
-      
+        .catch((error) => {
+          setMessage(error);
+          setMessageType("Error");
+        });
     } else {
-      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+      if (
+        window.confirm(
+          `${newName} is already added to phonebook, replace the old number with a new one?`
+        )
+      ) {
         const { id } = isPersonFound;
         personServices
           .updatePerson(id, addNewPerson)
-          .then((response) => { 
-            const updatePersonsList = persons.map((person) => person.id !== id ? person : response);
+          .then((response) => {
+            const updatePersonsList = persons.map((person) =>
+              person.id !== id ? person : response
+            );
             setPersons(updatePersonsList);
           })
           .catch((error) => alert(error));
@@ -136,20 +147,20 @@ const App = () => {
       personServices
         .deletePerson(id)
         .then(() => {
-          const allPersons = persons.filter(person => person.id !== id);
+          const allPersons = persons.filter((person) => person.id !== id);
           setPersons(allPersons);
         })
         .catch((error) => {
           setMessage(
             `Information of ${name} has already been removed from server`
           );
-          setMessageType('Error');
+          setMessageType("Error");
           setTimeout(() => {
             setMessage(null);
-            setMessageType('');
+            setMessageType("");
           }, 5000);
-          setPersons(persons.filter(person => person.id !== id));
-        })
+          setPersons(persons.filter((person) => person.id !== id));
+        });
     }
   };
 
@@ -161,26 +172,32 @@ const App = () => {
       })
       .catch((error) => {
         alert(error);
-      })
+      });
   }, []);
+
+  console.log('persons',persons);
 
   return (
     <div>
       <h2>Phonebook</h2>
-      <Notification message={message} messageType={messageType}/>
-      <Filter nameToFind={nameToFind} findPerson={findPerson}/>
+      <Notification message={message} messageType={messageType} />
+      <Filter nameToFind={nameToFind} findPerson={findPerson} />
       <h3>add a new</h3>
-      <PersonForm 
+      <PersonForm
         newName={newName}
         newNumber={newNumber}
         addNewName={addNewName}
         addNewNumber={addNewNumber}
-        addNewPerson={addNewPerson} 
+        addNewPerson={addNewPerson}
       />
       <h2>Numbers</h2>
-      <Persons searchResult={searchResult} persons={persons} deletePerson={deletePerson}/>
+      <Persons
+        searchResult={searchResult}
+        persons={persons}
+        deletePerson={deletePerson}
+      />
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
